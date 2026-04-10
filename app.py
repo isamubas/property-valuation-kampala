@@ -75,9 +75,9 @@ with gr.Blocks(title="Kampala Property Valuation") as app:
         outputs=output
     )
 if __name__ == "__main__":
-    app.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        show_api=False,
-        show_error=True,
-    )
+   app.launch(
+    server_name="0.0.0.0",
+    server_port=7860,
+    share=True,
+    show_error=True,
+)
