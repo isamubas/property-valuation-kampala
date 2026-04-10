@@ -3,4 +3,4 @@ numpy
 scikit-learn
 joblib
 gradio
-pyaudioop
+audioop-lts>=0.2.1
