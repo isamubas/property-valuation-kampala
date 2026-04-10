@@ -1,4 +1,4 @@
-# 🏠 Kampala Condominium Price Predictor
+#  Kampala Condominium Price Predictor
 
 **Automated Valuation Model (AVM)** using Machine Learning (Random Forest)
 
@@ -52,4 +52,4 @@ print(f"Predicted Price: ${price:,.2f}")
 ## License
 MIT License - See LICENSE file for details
 
-Made with ❤️ for academic and research purposes.
+Made  for academic and research purposes.
