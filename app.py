@@ -36,7 +36,7 @@ def predict_price(
         'Security_score': security_score,
         'Access_score': access_score,
         'Premium_features_score': premium_features,
-        'View_and _outdoor_score': view_outdoor,
+        'View_and_outdoor_score': view_outdoor,
         'Wellness_score': wellness_score
     }])
 
