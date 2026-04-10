@@ -11,7 +11,7 @@ encoder_path = BASE_DIR / "models" / "neighborhood_encoder.pkl"
 model = joblib.load(model_path)
 encoder = joblib.load(encoder_path)
 
-print("✅ Model and encoder loaded successfully from src/inference.py")
+print(" Model and encoder loaded successfully from src/inference.py")
 
 
 def predict_property_price(
