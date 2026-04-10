@@ -47,7 +47,7 @@ def predict_price(
 # ==================== Gradio App ====================
 with gr.Blocks(title="Kampala Property Valuation") as app:
     gr.Markdown("# 🏠 Kampala Condominium Price Predictor")
-    gr.Markdown("### Random Forest Model (R² ≈ 0.59)")
+    gr.Markdown("### Random Forest Model (R² ≈ 0.457)")
 
     with gr.Row():
         with gr.Column():
@@ -79,6 +79,7 @@ if __name__ == "__main__":
         server_name="0.0.0.0",
         server_port=7860,
         share=False,
-        auth=None,
+        show_api=False,
+        show_error=True,
         prevent_thread_lock=True
-    )  
+    )
