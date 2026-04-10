@@ -21,7 +21,7 @@ Predicts residential condominium prices in Kampala, Uganda based on:
 
 ### Model Performance
 - **Best Model**: Tuned Random Forest  
-- **R² Score**: ≈ 0.59 (on log-transformed price)  
+- **R² Score**: ≈ 0.457 (on log-transformed price)  
 - Trained on 108 anonymized records
 
 ### Try the App
