@@ -6,7 +6,7 @@ This project predicts residential condominium prices in Kampala, Uganda using lo
 
 ## Key Results
 - **Best Model**: Tuned Random Forest  
-- **Performance**: R² ≈ 0.59 (log-transformed price)  
+- **Performance**: R² ≈ 0.457 (log-transformed price)  
 - **Dataset**: 108 observations (anonymized)  
 - **Most Important Features**: Latitude, Longitude, Neighborhood, Bedrooms
 
