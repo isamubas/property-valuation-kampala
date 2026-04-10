@@ -74,8 +74,7 @@ with gr.Blocks(title="Kampala Property Valuation") as app:
                 essential, security, access, premium, view, wellness],
         outputs=output
     )
-
- if __name__ == "__main__":
+if __name__ == "__main__":
     app.launch(
         server_name="0.0.0.0",
         server_port=7860,
