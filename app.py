@@ -76,11 +76,14 @@ with gr.Blocks(title="Kampala Property Valuation") as app:
     )
 
 
+   # Final launch configuration for Hugging Face Spaces (2026)
+if __name__ == "__main__":
     app.launch(
-    server_name="0.0.0.0",
-    server_port=7860,
-    share=False,
-    auth=None,
-    show_error=True,
-    prevent_thread_lock=True
-)
+        server_name="0.0.0.0",
+        server_port=7860,
+        share=False,
+        show_api=False,
+        show_error=True,
+        prevent_thread_lock=True,   # Important for HF
+        ssl_verify=False
+    )
