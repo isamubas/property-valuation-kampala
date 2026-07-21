@@ -26,7 +26,7 @@ Predicts residential condominium prices in Kampala, Uganda based on:
 
 ### Try the App
 Just fill in the details and click **Predict Property Price**
-
+https://huggingface.co/spaces/The-Rookie/kampala-property-price-predictor
 ---
 
 **Note**: The full dataset is not shared publicly for privacy reasons. Only the trained model and encoder are provided.
