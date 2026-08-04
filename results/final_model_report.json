@@ -1,0 +1,79 @@
+{
+  "trained_rows": 87,
+  "features": [
+    "Bedrooms",
+    "Latitude",
+    "Longitude",
+    "Security_score",
+    "Access_score",
+    "View_and _outdoor_score"
+  ],
+  "dropped_features": {
+    "final size": "10 observations of 87 \u2014 imputing would invent the variable",
+    "Bathrooms": "59% missing and insignificant once Bedrooms is controlled for (p=0.74)",
+    "Essential_Utilities_score": "one value in 97.7% of rows",
+    "Premium_features_score": "one value in 95.4% of rows",
+    "Wellness_score": "one value in 95.4% of rows"
+  },
+  "target": "log(Price USD)",
+  "best_params": {
+    "max_depth": 4,
+    "max_features": "sqrt",
+    "min_samples_leaf": 1,
+    "n_estimators": 500
+  },
+  "nested_cv": {
+    "random_mean": 0.6692525734766158,
+    "random_std": 0.16546784256887523,
+    "grouped_mean": -0.19645670228194084,
+    "grouped_std": 1.1021803085719284
+  },
+  "benchmarks": {
+    "Ridge (linear hedonic)": {
+      "mean": 0.11256208094338206,
+      "std": 0.2527955922864047
+    },
+    "Gradient Boosting": {
+      "mean": 0.661588377527286,
+      "std": 0.18188679909608493
+    },
+    "Location only (RF)": {
+      "mean": 0.6396269367250277,
+      "std": 0.17428742145196716
+    }
+  },
+  "permutation_importance": [
+    {
+      "feature": "Latitude",
+      "importance": 0.6940748435969484,
+      "std": 0.09853257934963165
+    },
+    {
+      "feature": "Longitude",
+      "importance": 0.11954730235430854,
+      "std": 0.021888726904761853
+    },
+    {
+      "feature": "Bedrooms",
+      "importance": 0.051581300926705966,
+      "std": 0.013891188488011578
+    },
+    {
+      "feature": "Access_score",
+      "importance": 0.04630031872863388,
+      "std": 0.014523355667644414
+    },
+    {
+      "feature": "Security_score",
+      "importance": 0.00897935776993692,
+      "std": 0.003976834276828447
+    },
+    {
+      "feature": "View_and _outdoor_score",
+      "importance": 0.003336487633609626,
+      "std": 0.0016921787920921422
+    }
+  ],
+  "residual_sigma_log": 0.3708692200606627,
+  "distinct_locations": 16
+}

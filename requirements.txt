@@ -1,3 +1,5 @@
+# Runtime deps for the Gradio app / Hugging Face Space only.
+# The analysis and training scripts additionally need requirements-dev.txt.
 gradio
 huggingface_hub==0.28.1
 pandas

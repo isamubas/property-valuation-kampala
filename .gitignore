@@ -1,0 +1,10 @@
+# Source data is not published — README states this for privacy.
+data/
+
+__pycache__/
+*.pyc
+catboost_info/
+.venv/
+venv/
+.env
+.ipynb_checkpoints/

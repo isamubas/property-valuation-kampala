@@ -1,0 +1,10 @@
+# Only needed to re-run the audit, diagnostics, ablation and training scripts.
+# The deployed Space needs nothing beyond requirements.txt.
+-r requirements.txt
+openpyxl
+matplotlib
+statsmodels
+scipy
+xgboost
+lightgbm
+catboost

@@ -1,83 +1,126 @@
-import gradio as gr
-import pandas as pd
-import numpy as np
-import joblib
+"""Gradio app for the Kampala condominium valuation model.
+
+Two deliberate differences from the previous version:
+
+1. **It returns an interval, not a bare number.** The residual spread implies a
+   95% interval of roughly x2.07 / /2.07 around any point estimate. Showing
+   "$200,000" alone would imply a precision this model does not have.
+
+2. **Coordinates are derived from the neighbourhood, not typed by the user.**
+   The training data holds 16 neighbourhood centroids, not property locations,
+   so a hand-entered coordinate would be answered by whichever centroid it fell
+   nearest anyway. Selecting a neighbourhood is the honest interface.
+
+The previous app also back-transformed with `np.expm1`, which is the inverse of
+log1p; the model is trained on plain log, so `np.exp` is correct. Duan's
+smearing factor is applied on top, since exp() of a log prediction returns the
+conditional median and underestimates the mean.
+"""
+import json
 from pathlib import Path
 
-# Load model and encoder
-BASE_DIR = Path(__file__).parent
-model = joblib.load(BASE_DIR / "models/random_forest_property_model.pkl")
-encoder = joblib.load(BASE_DIR / "models/neighborhood_encoder.pkl")
+import gradio as gr
+import joblib
+import numpy as np
+import pandas as pd
 
-neighborhood_names = encoder.classes_.tolist()
+BASE = Path(__file__).parent
 
-def predict_price(
-    neighborhood_name: str,
-    latitude: float,
-    longitude: float,
-    bedrooms: float,
-    bathrooms: float,
-    essential_utilities: int = 0,
-    security_score: int = 1,
-    access_score: int = 1,
-    premium_features: int = 0,
-    view_outdoor: int = 0,
-    wellness_score: int = 0
-):
-    neighborhood_encoded = encoder.transform([neighborhood_name])[0]
+model = joblib.load(BASE / "models" / "condominium_rf_model.pkl")
+metadata = joblib.load(BASE / "models" / "model_metadata.pkl")
+CENTROIDS = joblib.load(BASE / "models" / "neighbourhood_centroids.pkl")
 
-    input_df = pd.DataFrame([{
-        'Neighborhood': neighborhood_encoded,
-        'Latitude': latitude,
-        'Longitude': longitude,
-        'Bedrooms': bedrooms,
-        'Bathrooms': bathrooms,
-        'Essential_Utilities_score': essential_utilities,
-        'Security_score': security_score,
-        'Access_score': access_score,
-        'Premium_features_score': premium_features,
-        'View_and _outdoor_score': view_outdoor,
-        'Wellness_score': wellness_score
-    }])
+FEATURES = metadata["features"]
+SIGMA = metadata["sigma"]
 
-    pred_log = model.predict(input_df)
-    pred_usd = np.expm1(pred_log)[0]
-    return f"${pred_usd:,.2f}"
+report = json.loads((BASE / "results" / "final_model_report.json").read_text())
+R2 = report["nested_cv"]["random_mean"]
+R2_SD = report["nested_cv"]["random_std"]
 
-# ==================== Gradio App ====================
-with gr.Blocks(title="Kampala Property Valuation") as app:
-    gr.Markdown("# 🏠 Kampala Condominium Price Predictor")
-    gr.Markdown("### Random Forest Model (R² ≈ 0.457)")
+# Duan's smearing estimator, computed from the training residuals.
+SMEARING = 1.139
+
+NEIGHBOURHOODS = sorted(CENTROIDS)
+
+
+def predict(neighbourhood: str, bedrooms: float, security: int, access: int, view: int):
+    centroid = CENTROIDS[neighbourhood]
+    row = pd.DataFrame([{
+        "Bedrooms": bedrooms,
+        "Latitude": centroid["Latitude"],
+        "Longitude": centroid["Longitude"],
+        "Security_score": security,
+        "Access_score": access,
+        "View_and _outdoor_score": view,
+    }])[FEATURES]
+
+    log_pred = float(model.predict(row)[0])
+    point = np.exp(log_pred) * SMEARING
+    low = np.exp(log_pred - 1.96 * SIGMA) * SMEARING
+    high = np.exp(log_pred + 1.96 * SIGMA) * SMEARING
+
+    return (
+        f"## ${point:,.0f}\n\n"
+        f"**95% interval: ${low:,.0f} — ${high:,.0f}**\n\n"
+        f"The interval is wide because the model is typically wrong by about "
+        f"40%. Treat the range as the answer, not the midpoint."
+    )
+
+
+LIMITATIONS = """
+This model is **deliberately honest about being limited**. Before using a
+number from it:
+
+- **Trained on 87 records.** Small enough that every estimate carries wide
+  uncertainty.
+- **Typical error is 40%** (MAPE). Only 52% of predictions land within 20% of
+  the true price. Commercial AVMs target 10–15%.
+- **Predictions are ~94% location.** Latitude alone carries most of the model;
+  bedrooms and amenity scores together add very little.
+- **Only valid for the 18 neighbourhoods listed.** Tested on held-out
+  *neighbourhoods*, performance is negative — it cannot value a property
+  somewhere it has never seen.
+- **Floor area is absent.** The most important variable in property valuation
+  was missing from 88% of the source data and had to be excluded.
+- **Based on listing prices**, not achieved sale prices. Asking prices usually
+  exceed what buyers actually pay.
+
+Full methodology and limitations: `notes/model-documentation.md` in the repo.
+"""
+
+with gr.Blocks(title="Kampala Condominium Valuation") as app:
+    gr.Markdown(
+        f"# 🏠 Kampala Condominium Price Predictor\n"
+        f"Random Forest hedonic model · nested-CV R² **{R2:.3f} ± {R2_SD:.3f}** "
+        f"on log price (previous version: 0.457)"
+    )
 
     with gr.Row():
         with gr.Column():
-            neighborhood = gr.Dropdown(choices=neighborhood_names, label="Neighborhood", value=neighborhood_names[0])
-            lat = gr.Number(label="Latitude", value=0.3420, precision=6)
-            lon = gr.Number(label="Longitude", value=32.6056, precision=6)
-            bedrooms = gr.Number(label="Bedrooms", value=3, precision=1)
-            bathrooms = gr.Number(label="Bathrooms", value=2.5, precision=1)
-
+            neighbourhood = gr.Dropdown(
+                choices=NEIGHBOURHOODS, value="Kololo", label="Neighbourhood",
+                info="Coordinates are set from the neighbourhood centroid",
+            )
+            bedrooms = gr.Slider(1, 6, value=3, step=1, label="Bedrooms")
         with gr.Column():
-            essential = gr.Slider(0, 3, value=0, step=1, label="Essential Utilities")
-            security = gr.Slider(0, 3, value=1, step=1, label="Security")
-            access = gr.Slider(0, 3, value=1, step=1, label="Access")
-            premium = gr.Slider(0, 3, value=0, step=1, label="Premium Features")
-            view = gr.Slider(0, 3, value=0, step=1, label="View & Outdoor")
-            wellness = gr.Slider(0, 3, value=0, step=1, label="Wellness")
+            security = gr.Slider(0, 3, value=1, step=1, label="Security score")
+            access = gr.Slider(0, 2, value=1, step=1, label="Access score")
+            view = gr.Slider(0, 2, value=0, step=1, label="View & outdoor score")
 
-    btn = gr.Button("🔮 Predict Property Price", variant="primary", size="large")
-    output = gr.Textbox(label="Predicted Price (USD)")
+    btn = gr.Button("Estimate value", variant="primary", size="lg")
+    out = gr.Markdown()
 
-    btn.click(
-        fn=predict_price,
-        inputs=[neighborhood, lat, lon, bedrooms, bathrooms,
-                essential, security, access, premium, view, wellness],
-        outputs=output
+    btn.click(predict, [neighbourhood, bedrooms, security, access, view], out)
+
+    with gr.Accordion("⚠️ Limitations — read before relying on this", open=False):
+        gr.Markdown(LIMITATIONS)
+
+    gr.Markdown(
+        "Amenity scores dropped from the previous version "
+        "(`Essential_Utilities`, `Premium_features`, `Wellness`) were constant "
+        "in 95–98% of the training data and carried no information. `Bathrooms` "
+        "was dropped as insignificant once bedrooms is controlled for."
     )
+
 if __name__ == "__main__":
-   app.launch(
-    server_name="0.0.0.0",
-    server_port=7860,
-    share=True,
-    show_error=True,
-)
+    app.launch(server_name="0.0.0.0", server_port=7860)
