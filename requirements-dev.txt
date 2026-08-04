@@ -2,6 +2,7 @@
 # The deployed Space needs nothing beyond requirements.txt.
 -r requirements.txt
 openpyxl
+joblib
 matplotlib
 statsmodels
 scipy

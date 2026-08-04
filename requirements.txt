@@ -1,9 +1,12 @@
 # Runtime deps for the Gradio app / Hugging Face Space only.
 # The analysis and training scripts additionally need requirements-dev.txt.
-gradio
-huggingface_hub==0.28.1
-pandas
-numpy
-scikit-learn
-joblib
-audioop-lts>=0.2.1
+#
+# Versions are pinned to the ones the app was tested against. scikit-learn in
+# particular must match the version the model was pickled with (1.7.1) —
+# loading a model across versions can fail or silently misbehave at predict
+# time, which is hard to diagnose because the app still starts normally.
+gradio==6.22.0
+scikit-learn==1.7.1
+numpy==2.3.0
+pandas==2.3.0
+joblib==1.5.1

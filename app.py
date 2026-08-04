@@ -17,6 +17,7 @@ smearing factor is applied on top, since exp() of a log prediction returns the
 conditional median and underestimates the mean.
 """
 import json
+import traceback
 from pathlib import Path
 
 import gradio as gr
@@ -44,27 +45,38 @@ NEIGHBOURHOODS = sorted(CENTROIDS)
 
 
 def predict(neighbourhood: str, bedrooms: float, security: int, access: int, view: int):
-    centroid = CENTROIDS[neighbourhood]
-    row = pd.DataFrame([{
-        "Bedrooms": bedrooms,
-        "Latitude": centroid["Latitude"],
-        "Longitude": centroid["Longitude"],
-        "Security_score": security,
-        "Access_score": access,
-        "View_and _outdoor_score": view,
-    }])[FEATURES]
+    # Errors are caught and returned as text. Without this a failure inside the
+    # handler leaves the output blank, which looks like "the button does
+    # nothing" and gives the user nothing to report.
+    try:
+        centroid = CENTROIDS[neighbourhood]
+        row = pd.DataFrame([{
+            "Bedrooms": float(bedrooms),
+            "Latitude": centroid["Latitude"],
+            "Longitude": centroid["Longitude"],
+            "Security_score": float(security),
+            "Access_score": float(access),
+            "View_and _outdoor_score": float(view),
+        }])[FEATURES]
 
-    log_pred = float(model.predict(row)[0])
-    point = np.exp(log_pred) * SMEARING
-    low = np.exp(log_pred - 1.96 * SIGMA) * SMEARING
-    high = np.exp(log_pred + 1.96 * SIGMA) * SMEARING
+        log_pred = float(model.predict(row)[0])
+        point = np.exp(log_pred) * SMEARING
+        low = np.exp(log_pred - 1.96 * SIGMA) * SMEARING
+        high = np.exp(log_pred + 1.96 * SIGMA) * SMEARING
 
-    return (
-        f"## ${point:,.0f}\n\n"
-        f"**95% interval: ${low:,.0f} — ${high:,.0f}**\n\n"
-        f"The interval is wide because the model is typically wrong by about "
-        f"40%. Treat the range as the answer, not the midpoint."
-    )
+        return (
+            f"## ${point:,.0f}\n\n"
+            f"**95% interval: ${low:,.0f} — ${high:,.0f}**\n\n"
+            f"The interval is wide because the model is typically wrong by about "
+            f"40%. Treat the range as the answer, not the midpoint."
+        )
+    except Exception as exc:
+        return (
+            f"### ⚠️ Prediction failed\n\n"
+            f"`{type(exc).__name__}: {exc}`\n\n"
+            f"<details><summary>Details</summary>\n\n"
+            f"```\n{traceback.format_exc()}\n```\n</details>"
+        )
 
 
 LIMITATIONS = """
